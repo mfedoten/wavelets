@@ -47,7 +47,7 @@ t  = (0:N-1)*dt;    % time vector
 % read options (if any) into structure
 if nargin < 4
     opt = struct();
-elseif nargin > 4
+elseif nargin >= 4
     try
         opt = struct(varargin{:});
     catch
@@ -201,20 +201,28 @@ if isfield(opt,'plot') && opt.plot
     
     % plot wavelets
     contourf(t,f,tfr,20,'edgecolor','none'); set(gca,'YDir','normal');
-    colormap(brewermap([],'WhRd'));
+    if verLessThan('matlab','8.2')
+        if exist('brewermap','file') == 2
+            colormap(brewermap([],'WhRd'));
+        else
+            colormap(1-hot);
+        end
+        cc = 'k';
+    else
+        cc = 'w';
+    end
     colorbar;
     hold on;
     
     % plot COI
-    LW = 1.3;
-    hPatch = patch([L 0 0]*dt,[f f(end) 0],min(tfr(:)),'FaceColor','k','EdgeColor',...
-        'k','LineWidth',LW);
-    hatchfill(hPatch, 'cross', 45, 10);
-    hPatch = patch([R N N]*dt,[f f(end) 0],min(tfr(:)),'FaceColor','k','EdgeColor',...
-        'k','LineWidth',LW);
-    hatchfill(hPatch, 'cross', 45, 10);
+    hPatch = patch([L 0 0]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
+        cc,'LineWidth',1.3);
+    hatchfill(hPatch, 'cross', 45, 10,cc);
+    hPatch = patch([R N N]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
+        cc,'LineWidth',1.3);
+    hatchfill(hPatch, 'cross', 45, 10,cc);
     
-    tightfig; 
+%     tightfig; 
 end
 
 end
