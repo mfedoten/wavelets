@@ -17,7 +17,7 @@ Cone of influence is the region of the wavelet transform, which is influenced by
 This function estimates maximum frequency (minimal scale) as half of Nyquist frequency or takes the one provided by user. Minimum frequency (maximal scale) is chosen such as COI at this scale/frequency would affect half of time points.
 
 This functions returns scalogram, percentage energy for each coefficient of CWT. It also plots CWT (if such option is specified), all the values on the plot are **linear**.
-Plot function displays COI as hatched regions, to do so an additional function is required. I modified [hatchfill function](http://www.mathworks.com/matlabcentral/fileexchange/30733-hatchfill) to control color of hatch lines. Otherwise it can be plotted with MATLAB patch function and afterwards setting alpha to a value less than 1.
+Plot function displays COI as hatched regions, to do so an additional function is required. [Hatchfill function](http://www.mathworks.com/matlabcentral/fileexchange/30733-hatchfill) was used for that. I modifies this function slightly in order to control color of hatch lines and added to the repo for convenience. Otherwise, instead of using hatched regions, COI can be indicated by using MATLAB `patch` function with alpha set to a value less than 1.
 
 
 ## Syntax
@@ -69,8 +69,5 @@ opt = struct('fstep',1,'plot',1);
 
 
 ## References
-1. Jordan, D., Miksad, R. W. & Powers, E. J. Implementation of the 
-   continuous wavelet transform for digital time series analysis. Review 
-   of Scientific Instruments 68, 1484 (1997).
-2. Torrence, C. & Compo, G. P. A Practical Guide to Wavelet Analysis. 
-   Bulletin of the American Meteorological Society 79, 61?78 (1998).
+1. Jordan, D., Miksad, R. W. & Powers, E. J. Implementation of the continuous wavelet transform for digital time series analysis. Review of Scientific Instruments 68, 1484 (1997).
+2. Torrence, C. & Compo, G. P. A Practical Guide to Wavelet Analysis.  Bulletin of the American Meteorological Society 79, 61-78 (1998).
