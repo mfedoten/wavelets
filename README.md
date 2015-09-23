@@ -58,6 +58,7 @@ fs = 100;
 t  = (0:N-1)/fs;
 x  = chirp(t,0,t(end),fs/2,'quadratic')';
 x  = x + 0.5*randn(size(x));
+figure; plot(t,x);
 % get cwt from min frequency to fs/2 with 1Hz step and display results
 [WT,f,t,coi,scales] = wt(x,fs,'morl','fstep',1,'plot',1);
 % or you could specify options in the form of structure
