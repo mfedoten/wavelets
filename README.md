@@ -17,13 +17,17 @@ Cone of influence is the region of the wavelet transform, which is influenced by
 
 ## Syntax
 
-<<<<<<< HEAD
 ### Input:
 
 sig    : signal to analyse;
 fs     : sampling frequency;
 wname  : name of the wavelet function;
 opt    : options for wavelet transform, can be defined either as structure or as name-value pairs.
+|   |   |   |   |   |
+|---|---|---|---|---|
+|   |   |   |   |   |
+|   |   |   |   |   |
+|   |   |   |   |   |
 
 OUTPUT: tfr - matrix with coefficients of wavelet transform, where rows 
               correspond to frequency, columns to time.
