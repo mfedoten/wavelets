@@ -1,11 +1,10 @@
 # Continuous wavelet transform
 
-This is MATLAB script I'm using for continuous wavelet transform (CWT).
-It uses built-in MATLAB functions to calculate the transform (cwt.m and cwtft.m), the main interest here is how to chose scales/frequency and how to compute cone of influence (COI).
+This is a MATLAB script I'm using to obtain continuous wavelet transform (CWT).  It uses built-in MATLAB functions to calculate the transform (cwt.m and cwtft.m), the main interest here is how to chose scales/frequency and how to compute cone of influence (COI).
 
 This function allows two ways of computing CWT:
 - straightforward, based on convolution;
-- more computationally efficient, based on FFT;
+- more computationally efficient, based on FFT.
 
 The choice of scales can be done also using two approaches:
 - construct linearly spaced *frequency* vector and then convert it to scales;
@@ -20,8 +19,6 @@ This function estimates maximum frequency (minimal scale) as half of Nyquist fre
 This functions returns scalogram, percentage energy for each coefficient of CWT. It also plots CWT (if such option is specified), all the values on the plot are **linear**.
 Plot function displays COI as hatched regions, to do so an additional function is required. I modified [hatchfill function](http://www.mathworks.com/matlabcentral/fileexchange/30733-hatchfill) to control color of hatch lines. Otherwise it can be plotted with MATLAB patch function and afterwards setting alpha to a value less than 1.
 
-**Note:** for now, only analytical Morlet wavelet is supported for FFT-based CWT.
-
 
 ## Syntax
 
@@ -32,12 +29,14 @@ Plot function displays COI as hatched regions, to do so an additional function i
 |wname  | name of the wavelet function |
 |opt    | options for wavelet transform, can be defined either as structure or as name-value pairs |
 
+**Note:** for now, only analytical Morlet wavelet is supported for FFT-based CWT.
+
 |Output |                   |
 |-------|-------------------|
-|tfr    | matrix with coefficients of wavelet transform, where rows correspond to frequency, columns to time |
+|tfr    | matrix with scalogram values (energy per coefficient of CWT), where rows correspond to frequency, columns to time |
 |f      | frequency vector |
 |t      | time vector |
-|coi    | cone of influence of specified wavelet function.  Coefficients within the cone should be treated with care.  Returns matrix of size Nsc\*2. Where Nsc is number of scales,columns correspond to left and right borders of COI |
+|coi    | cone of influence of specified wavelet function.  Coefficients within the cone should be treated with care. Returns matrix of size Nsc\*2, where Nsc is number of scales, Columns correspond to left and right borders of COI |
 |scales | vector of scales |
 
 |Options  | Possible values      |                   |
@@ -51,7 +50,7 @@ Plot function displays COI as hatched regions, to do so an additional function i
 |plot     | boolean              | if True plots CWT with contour plots, values and scales/frequencies are linearly scaled |
 
 
-## Exaample
+## Example
 ```matlab
 % create chirp signal
 N  = 1000;
@@ -65,7 +64,8 @@ x  = x + 0.5*randn(size(x));
 opt = struct('fstep',1,'plot',1);
 [WT,f,t,coi,scales] = wt(x,fs,'morl',opt);
 ```
-![Example](/example.png)
+![Example signal](/example_sig.png)
+![Example CWT](/example.png)
 
 
 ## References
