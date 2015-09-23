@@ -64,8 +64,8 @@ x  = x + 0.5*randn(size(x));
 % or you could specify options in the form of structure
 opt = struct('fstep',1,'plot',1);
 [WT,f,t,coi,scales] = wt(x,fs,'morl',opt);
-![Example](/example.png)
 ```
+![Example](/example.png)
 
 
 ## References
