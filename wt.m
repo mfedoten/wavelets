@@ -1,32 +1,66 @@
 function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
-% [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
+% Calculates time-frequency representations (TFR) using continuous 1-D wavelet
+% transform (CWT). Also computes cone of influence (COI), a region where
+% coefficients of CWT are affects be edge effect.
 %
-% function [tfr,f,t,coi,scales] = wt(sig,fs,wname,plot)
-% Calculates time-frequency representations (TFR) using continuous 1-D
-% wavelet transform.
+% This function allows two ways of computing CWT:
+% - based on convolution (standard);
+% - based on FFT (more computationally efficient).
 %
-% INPUT: sig    - signal to analyse;
-%        fs     - sampling frequency;
-%        wname  - name of the wavelet function;
-%        opt    - options for wavelet transform, can be defined either as
-%                 structure or as name-value pairs.
+% The choice of scales can be done also using two approaches:
+% - construct linearly spaced *frequency* vector and then convert it to scales;
+% - geometrical spacing of *scales* as described in [1].
+%
+% COI is computed according to the method used for calculation of CWT
+% (convolution- or FFT-based):
+% - convolution-based: COI is defined as regions which are large than wavelet
+% support at each scale.
+% - FFT-based: COI is defined as e-folding time for the autocorrelation of
+% wavelet power at each scale [2].
+%
+%
+% SYNTAX
+% [tfr,f,t,coi,scales] = wt(sig,fs,wname,opt)
+%
+% INPUT
+% sig    - signal to analyse;
+% fs     - sampling frequency;
+% wname  - name of the wavelet function;
+% opt    - options for wavelet transform, can be defined either as structure or
+%          as name-value pairs.
 % 
-% OUTPUT: tfr - matrix with coefficients of wavelet transform, where rows 
-%               correspond to frequency, columns to time.
-%         f   - frequency vector;
-%         t   - time vector;
-%         coi - cone of influence of specified wavelet function.
-%               Coefficients within the cone should be treated with care.
-%               Returns matrix of size Nsc*2. Where Nsc is number of
-%               scales,columns correspond to left and right borders of COI.
-% OPTIONS:
-% type:
-% sampling:
-% fmax:
-% fstep:
-% F:
-% nscales:
-% plot:
+% OUTPUT
+% tfr    - matrix with scalogram values (energy per coefficient of CWT), where
+%          rows correspond to frequency, columns to time.
+% f      - frequency vector;
+% t      - time vector;
+% coi    - cone of influence of specified wavelet function.  Coefficients within
+%          the cone should be treated with care. Returns matrix of size Nsc\*2,
+%          where Nsc is number of scales, Columns correspond to left and right
+%          borders of COI;
+% scales - vector of scales.
+%
+% OPTIONS
+% type     : 'fft' (default) | 'conv'
+%   Which type of CWT to use: convolution of FFT-based.
+% sampling : 'freq' (default) | 'scales'
+%   Which sampling to use to construct vector of scales: linear sampling of
+%   frequencies or geometrical sampling of scales.
+% fmax     : float (default: fmax = fs/2)
+%   CWT will be computed up to this frequency (should be less or equal to
+%   Nyquist frequency).
+% fstep    : float (default: fstep = fmin)
+%   If sampling was chosen as 'freq', specifies frequency resolution.
+% nscales  : int
+%   If sampling was chosen as 'scales', specifies desired number of scales. By
+%   default nscales is chosen to give 65% overlap between wavelet basis, see [1]
+%   for details.
+% F        : vector of floats
+%   Can be used to create vector of scales, by conversion instead of creating
+%   vector inside the function (substitute 'fstep' option).
+% plot     : boolean (default: False)
+%   If True plots CWT with contour plots, values and scales/frequencies are
+%   linearly scaled and COI is displayed with hatched regions.
 %
 % REFERENCES:
 % 1. Jordan, D., Miksad, R. W. & Powers, E. J. Implementation of the 
@@ -34,8 +68,11 @@ function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
 %    of Scientific Instruments 68, 1484 (1997).
 % 2. Torrence, C. & Compo, G. P. A Practical Guide to Wavelet Analysis. 
 %    Bulletin of the American Meteorological Society 79, 61?78 (1998).
-
-
+% 
+%
+% Copyright Mariia Fedotenkova, 2015, INRIA Nancy.
+% Licensed for use under GNU General Public License, Version 2.  See LICENSE for
+% details.
 
 
 %-------------------------- Load and check inputs -------------------------
@@ -163,7 +200,7 @@ elseif strcmpi(opt.sampling,'scales')
     
 else
     % wrong type
-    error('Unknown metod of constructing scales vector: %s', opt.sampling);
+    error('Unknown method of constructing scales vector: %s', opt.sampling);
 end
 
 
@@ -176,7 +213,7 @@ if strcmpi(opt.type,'fft')      % FFT-based
 elseif strcmpi(opt.type,'conv')
     coefs  = cwt(sig, scales, wname);
 end
-% get power spectrum
+% get scalogram / power spectrum
 S = abs(coefs.*conj(coefs));
 % scalogram: % of energy at each scale
 tfr = 100*S./sum(S(:));

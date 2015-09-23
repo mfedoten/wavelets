@@ -43,10 +43,10 @@ Plot function displays COI as hatched regions, to do so an additional function i
 |---------|----------------------|-------------------|
 |type     | **'fft'**, 'conv'    | which type of CWT to use: convolution of FFT-based |
 |sampling | **'freq'**, 'scales' | which sampling to use to construct vector of scales: linear sampling of frequencies or geometrical sampling of scales |
-|fmax     | float                | CWT will be computed up to this frequency (should be less than Nyquist frequency) |
+|fmax     | float                | CWT will be computed up to this frequency (should be less or equal to Nyquist frequency) |
 |fstep    | float                | if sampling was chosen as 'freq', specifies frequency resolution |
 |nscales  | int                  | if sampling was chosen as 'scales', specifies desired number of scales |
-|F        | vector of floats     | can be used to create vector of scales, by conversion instead of creating vector inside the function (substitute 'sampling' option) |
+|F        | vector of floats     | can be used to create vector of scales, by conversion instead of creating vector inside the function (substitute 'fstep' option) |
 |plot     | boolean              | if True plots CWT with contour plots, values and scales/frequencies are linearly scaled |
 
 
