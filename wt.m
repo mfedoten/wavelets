@@ -259,6 +259,10 @@ if isfield(opt,'plot') && opt.plot
         cc,'LineWidth',1.3);
     hatchfill(hPatch, 'cross', 45, 10,cc);
     
+    % axes labels
+    xlabel('Time', 'Fontsize', 14)
+    ylabel('Pseudo-frequency', 'Fontsize', 14)
+    
 %     tightfig; 
 end
 
