@@ -169,7 +169,7 @@ if strcmpi(opt.sampling,'freq')
     
 elseif strcmpi(opt.sampling,'scales')
     % scales
-    % chose the smallest frequency based on the highest frequency
+    % chose the smallest scale based on the highest frequency
     s0 = 1/(factor*opt.fmax);
     % the biggest scale: see Section VI in [1] for details.
     smax = N/(4*bound);
