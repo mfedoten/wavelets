@@ -216,8 +216,9 @@ end
 % get scalogram / power spectrum
 S = abs(coefs.*conj(coefs));
 % scalogram: % of energy at each scale
-tfr = 100*S./sum(S(:));
+% tfr = 100*S./sum(S(:));
 % tfr    = S./N;
+tfr = S./N/w0*2*pi;
 
 
 %---------------------------- Cone of influence ---------------------------
