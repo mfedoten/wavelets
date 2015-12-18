@@ -49,6 +49,9 @@ function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
 % fmax     : float (default: fmax = fs/2)
 %   CWT will be computed up to this frequency (should be less or equal to
 %   Nyquist frequency).
+% fmin     : float
+%   Minimal frequency. If nothing is provided, then it is chosen so only 50% of
+%   coefficients are affected by the COI.
 % fstep    : float (default: fstep = fmin)
 %   If sampling was chosen as 'freq', specifies frequency resolution.
 % nscales  : int
@@ -58,6 +61,9 @@ function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
 % F        : vector of floats
 %   Can be used to create vector of scales, by conversion instead of creating
 %   vector inside the function (substitute 'fstep' option).
+% norm     : boolean (default: False)
+%   If True, then resulting each row of CWT will be normalized by the
+%   corresponding scale.
 % plot     : boolean (default: False)
 %   If True plots CWT with contour plots, values and scales/frequencies are
 %   linearly scaled and COI is displayed with hatched regions.
@@ -133,6 +139,18 @@ end
 
 
 %------------------------ Frequencies/scales vector -----------------------
+% First find smallest freqyency / largest scale
+% smalest frequency / largest scale
+if isfield(opt, 'fmin')
+    % if min freq. is specified, derive max scale from it
+    fmin = opt.fmin;
+    smax = 1/(factor*fmin);
+else
+    % if no, minimal frequency is chosen so that 1/2 of WT coefficients
+    % would be affected by COI see Section VI in [1] for details.
+    smax = N/(4*bound);
+    fmin = 1/(smax*factor);
+end
 
 % How to construct scales vector: by geometrical sampling of scales or
 % based on linear sampling of frequencies?
@@ -141,28 +159,23 @@ if strcmpi(opt.sampling,'freq')
     if isfield(opt, 'F')  % if freq. vector is provided just use it
         f = opt.F;
     else                  % if no, build new freq vector
-        % minimal frequency is chosen so that 1/2 of WT coefficients would
-        % be affected by COI see Section VI in [1] for details.
-        smax = N/(4*bound);
-        fmin = 1/(smax*factor);
-        
-        % chose the frequncy step 
+        % chose the frequncy step
         if isfield(opt,'fstep') && ~isempty(opt.fstep)
             df = opt.fstep;
         else
-            df = fmin;
+            df = step_tmp;
         end
         
         % construct freq. vector
-        f  = df:df:opt.fmax;
-        % make spacing between scales "smoother"
-        if fmin < df
-            f = [fmin f];
-        elseif fmin > df
-            warning(['Frequency step df=%.3f is too small. ',...
-               'Consider to switch to default frequency step df=%.3f.'],...
-               df,fmin);
-        end
+        f  = fmin:df:opt.fmax;
+        %         % make spacing between scales "smoother"
+        %         if fmin < df
+        %             f = [fmin f];
+        %         elseif fmin > df
+        %             warning(['Frequency step df=%.3f is too small. ',...
+        %                'Consider to switch to default frequency step df=%.3f.'],...
+        %                df,fmin);
+        %         end
     end
     % convert frequency to scales
     scales = 1./(factor*f);
@@ -171,8 +184,7 @@ elseif strcmpi(opt.sampling,'scales')
     % scales
     % chose the smallest scale based on the highest frequency
     s0 = 1/(factor*opt.fmax);
-    % the biggest scale: see Section VI in [1] for details.
-    smax = N/(4*bound);
+    % construct scale vector
     if isfield(opt, 'nscales') && ~isempty(opt.nscales)
         % if we are given the number of scales
         I = opt.nscales;
@@ -215,6 +227,10 @@ elseif strcmpi(opt.type,'conv')
 end
 % get scalogram / power spectrum
 S = abs(coefs.*conj(coefs));
+% normalize be the scales
+if isfield(opt,'norm') && opt.norm
+    S = bsxfun(@rdivide,S,scales);
+end
 % scalogram: % of energy at each scale
 % tfr = 100*S./sum(S(:));
 % tfr    = S./N;
