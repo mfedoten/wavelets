@@ -139,17 +139,18 @@ end
 
 
 %------------------------ Frequencies/scales vector -----------------------
-% First find smallest freqyency / largest scale
-% smalest frequency / largest scale
+% First find smallest freqyency, which can be resolved -> largest scale and
+% define temporal freq. step, which is equal min. frequency. Minimal frequency
+% is chosen so that 1/2 of WT coefficients would be affected by COI see Section
+% VI in [1] for details.
+smax = N/(4*bound);
+fmin = 1/(smax*factor);
+df   = fmin;
+
+% if min freq. is specified, derive max scale from it
 if isfield(opt, 'fmin')
-    % if min freq. is specified, derive max scale from it
     fmin = opt.fmin;
     smax = 1/(factor*fmin);
-else
-    % if no, minimal frequency is chosen so that 1/2 of WT coefficients
-    % would be affected by COI see Section VI in [1] for details.
-    smax = N/(4*bound);
-    fmin = 1/(smax*factor);
 end
 
 % How to construct scales vector: by geometrical sampling of scales or
@@ -162,8 +163,6 @@ if strcmpi(opt.sampling,'freq')
         % chose the frequncy step
         if isfield(opt,'fstep') && ~isempty(opt.fstep)
             df = opt.fstep;
-        else
-            df = step_tmp;
         end
         
         % construct freq. vector
@@ -192,7 +191,7 @@ elseif strcmpi(opt.sampling,'scales')
         K = exp((log(smax) - log(s0)) / (I - 1));
     else
         % overlap (%) between wavelet basis, set it to an arbitrary value
-        chi = .65;
+        chi = .85;
         % proportionality constant
         wd = -sqrt(-2*log(chi));
         % constant ratio sc(i+1)/sc(i)
