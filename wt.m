@@ -87,7 +87,7 @@ N  = length(sig);   % number of points in the signal
 dt = 1/fs;          % sampling time
 t  = (0:N-1)*dt;    % time vector
 
-% read options (if any) into structure
+% read options (if any) into structure and set defaults
 if nargin < 4
     opt = struct();
 elseif nargin >= 4
@@ -97,46 +97,11 @@ elseif nargin >= 4
         error('Specify properties as one or more name-value pairs.');
     end
 end
-% set default values for missing options
-if ~isfield(opt, 'type'), opt.type = 'fft'; end
-if ~isfield(opt, 'sampling'), opt.sampling = 'freq'; end
-if ~isfield(opt, 'fmax'), opt.fmax = fs/2; end
+opt = check_opts(opt);
 
 
 %--------------------------- Wavelet parameters ---------------------------
-
-% define if we use convolution- or FFT-based (better) CWT?
-if strcmpi(opt.type,'fft')
-    % FFT-based wavelet transform
-    if ~strcmpi(wname,'morl')
-        % for now only Morlet wavelet is possible here:
-        wname = 'morl';
-        warning(['Sorry, this wavelet is not supported right now. ',...
-            'Using analytical Morlet']);
-    end
-    % wavelet center frequency
-    w0 = 6;
-    % Fourier factor
-    factor = 4*pi/(w0+sqrt(2+w0^2));
-    % borders of COI
-    bound = sqrt(2)/dt;
-    
-elseif strcmpi(opt.type,'conv')
-    % convolution-based wavelet transform
-    % center frequency
-    w0 = 2*pi*centfrq(wname);
-    % scale /freq. transform factor
-    factor = dt/centfrq(wname);
-    % borders of COI
-    bound = wavsupport(wname);
-    bound = bound(2);
-
-else
-    % unknown type -> error
-    error('Unknown type of CWT: %s. Acceptable values are: "fft" and "conv".',...
-        opt.sampling);
-end
-
+[w0,factor,bound] = wt_params(wt_type,wname,dt);
 
 %------------------------ Frequencies/scales vector -----------------------
 % First find smallest freqyency, which can be resolved -> largest scale and
@@ -280,6 +245,36 @@ if isfield(opt,'plot') && opt.plot
     ylabel('Pseudo-frequency', 'Fontsize', 14)
     
 %     tightfig; 
+end
+
+end
+
+function opt = check_opts(opt)
+% first check that all the fields are valid
+val_flds = {'type','sampling','fmax','fmin','fstep','nscales',...
+    'F','norm','plot'};
+opt_flds = fieldnames(opt);
+not_valid = opt_flds(~ismember(opt_flds,val_flds));
+if ~isempty(not_valid)
+    error('"%s" not a valid property.\n', not_valid{:});
+end
+
+% set default values for missing options
+% convolution- or FFT-based CWT
+if ~isfield(opt, 'type')
+    opt.type = 'fft';
+end
+% sampling of frequencies/scales
+if ~isfield(opt, 'sampling') || isfield(opt,'F')
+    opt.sampling = 'freq';
+elseif strcmpi(opt.sampling,'scales') && isfield(opt,'F')
+    warning(['Cannot use both scales and frequency vector. ',...
+        'Switching to sampling in frequencies.']);
+    opt.sampling = 'freq';
+end
+% maximal resolvable frequency
+if ~isfield(opt, 'fmax') || isempty(opt.fmax)
+    opt.fmax = fs/2;
 end
 
 end
