@@ -103,79 +103,21 @@ opt = check_opts(opt);
 %--------------------------- Wavelet parameters ---------------------------
 [w0,factor,bound] = wt_params(wt_type,wname,dt);
 
+
 %------------------------ Frequencies/scales vector -----------------------
-% First find smallest freqyency, which can be resolved -> largest scale and
-% define temporal freq. step, which is equal min. frequency. Minimal frequency
-% is chosen so that 1/2 of WT coefficients would be affected by COI see Section
-% VI in [1] for details.
-smax = N/(4*bound);
-fmin = 1/(smax*factor);
-df   = fmin;
+% Three ways to construct scales vector:
+% - by converting the provided frequency vector to vector of scales;
+% - based on linear sampling of frequencies;
+% - by geometrical sampling of scales.
 
-% if min freq. is specified, derive max scale from it
-if isfield(opt, 'fmin')
-    fmin = opt.fmin;
-    smax = 1/(factor*fmin);
-end
-
-% How to construct scales vector: by geometrical sampling of scales or
-% based on linear sampling of frequencies?
-if strcmpi(opt.sampling,'freq') 
-    % frequencies
-    if isfield(opt, 'F')  % if freq. vector is provided just use it
-        f = opt.F;
-    else                  % if no, build new freq vector
-        % chose the frequncy step
-        if isfield(opt,'fstep') && ~isempty(opt.fstep)
-            df = opt.fstep;
-        end
-        
-        % construct freq. vector
-        f  = fmin:df:opt.fmax;
-        %         % make spacing between scales "smoother"
-        %         if fmin < df
-        %             f = [fmin f];
-        %         elseif fmin > df
-        %             warning(['Frequency step df=%.3f is too small. ',...
-        %                'Consider to switch to default frequency step df=%.3f.'],...
-        %                df,fmin);
-        %         end
-    end
-    % convert frequency to scales
-    scales = 1./(factor*f);
-    
+if strcmpi(opt.sampling,'freq')
+    % sampling in frequencies
+    [f,scales] = wt_create_freq(N,bound,factor,opt);
 elseif strcmpi(opt.sampling,'scales')
-    % scales
-    % chose the smallest scale based on the highest frequency
-    s0 = 1/(factor*opt.fmax);
-    % construct scale vector
-    if isfield(opt, 'nscales') && ~isempty(opt.nscales)
-        % if we are given the number of scales
-        I = opt.nscales;
-        % derive ratio
-        K = exp((log(smax) - log(s0)) / (I - 1));
-    else
-        % overlap (%) between wavelet basis, set it to an arbitrary value
-        chi = .85;
-        % proportionality constant
-        wd = -sqrt(-2*log(chi));
-        % constant ratio sc(i+1)/sc(i)
-        K = w0/(w0 + wd);
-        % derive number of scales
-        I = round((log(smax) - log(s0))/log(K) + 1);
-    end
-    % build scales vector
-    scales = zeros(1,I);
-    scales(1) = s0;
-    for i=2:I
-        scales(i) = scales(i-1)*K;
-    end
-    scales = fliplr(scales);
-    % convert scales to frequencies
-    f = 1./(factor*scales);
-    
+    % sampling in scales
+    [f,scales] = wt_create_scales(N,bound,factor,opt);
 else
-    % wrong type
+    % wrong type of sampling
     error('Unknown method of constructing scales vector: %s', opt.sampling);
 end
 
@@ -183,31 +125,32 @@ end
 %---------------- Calculate wavelet transform coefficients ----------------
 
 if strcmpi(opt.type,'fft')      % FFT-based
+    % for now only morlet wavelet is supported with FFT-based method
+    wname = 'morl';
     cwtStruct = cwtft({sig,dt},'scales',scales,'wavelet',wname,...
         'padmode','zpd');
     coefs = cwtStruct.cfs;
 elseif strcmpi(opt.type,'conv')
     coefs  = cwt(sig, scales, wname);
 end
-% get scalogram / power spectrum
+
+% get scalogram (power)
 S = abs(coefs.*conj(coefs));
-% normalize be the scales
+
+% normalize by the scales
 if isfield(opt,'norm') && opt.norm
     S = bsxfun(@rdivide,S,scales);
 end
-% scalogram: % of energy at each scale
-% tfr = 100*S./sum(S(:));
-% tfr    = S./N;
+
+% normalize to get PSD
 tfr = S./N/w0*2*pi;
+% tfr = 100*S./sum(S(:));
 
 
 %---------------------------- Cone of influence ---------------------------
 
 % left and right edges of cone of influence
-border = ceil(bound * scales);
-L  = min(floor(N/2), border);
-R = max(ceil(N/2), N-border);
-coi = [L(:), R(:)];
+
 
 
 % --------------------------------- Plots ---------------------------------
