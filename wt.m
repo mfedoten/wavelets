@@ -103,7 +103,6 @@ opt = check_opts(opt);
 %--------------------------- Wavelet parameters ---------------------------
 [w0,factor,bound] = wt_params(wt_type,wname,dt);
 
-
 %------------------------ Frequencies/scales vector -----------------------
 % Three ways to construct scales vector:
 % - by converting the provided frequency vector to vector of scales;
@@ -121,9 +120,7 @@ else
     error('Unknown method of constructing scales vector: %s', opt.sampling);
 end
 
-
 %---------------- Calculate wavelet transform coefficients ----------------
-
 if strcmpi(opt.type,'fft')      % FFT-based
     % for now only morlet wavelet is supported with FFT-based method
     wname = 'morl';
@@ -146,12 +143,9 @@ end
 tfr = S./N/w0*2*pi;
 % tfr = 100*S./sum(S(:));
 
-
 %---------------------------- Cone of influence ---------------------------
-
 % left and right edges of cone of influence
-
-
+coi = wt_get_coi(scales, bound);
 
 % --------------------------------- Plots ---------------------------------
 if isfield(opt,'plot') && opt.plot
