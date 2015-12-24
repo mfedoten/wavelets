@@ -56,8 +56,10 @@ function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
 %   If sampling was chosen as 'freq', specifies frequency resolution.
 % nscales  : int
 %   If sampling was chosen as 'scales', specifies desired number of scales. By
-%   default nscales is chosen to give 65% overlap between wavelet basis, see [1]
+%   default nscales is chosen to give 85% overlap between wavelet basis, see [1]
 %   for details.
+% chi      : int
+%   Persantage of overlap between wavelet basis (default is 85%), see [1].
 % F        : vector of floats
 %   Can be used to create vector of scales, by conversion instead of creating
 %   vector inside the function (substitute 'fstep' option).
@@ -97,11 +99,22 @@ elseif nargin >= 4
         error('Specify properties as one or more name-value pairs.');
     end
 end
-opt = check_opts(opt);
+% set default values for missing options
+if ~isfield(opt, 'type'), opt.type = 'fft'; end
+if ~isfield(opt, 'fmax'), opt.fmax = fs/2; end
+if ~isfield(opt, 'chi'),  opt.chi  = 85; end
 
+% sampling of frequencies/scales (freq. default)
+if ~isfield(opt, 'sampling') || isfield(opt,'F')
+    opt.sampling = 'freq';
+elseif strcmpi(opt.sampling,'scales') && isfield(opt,'F')
+    warning(['Cannot use both scales and frequency vector. ',...
+        'Switching to sampling in frequencies.']);
+    opt.sampling = 'freq';
+end
 
 %--------------------------- Wavelet parameters ---------------------------
-[w0,factor,bound] = wt_params(wt_type,wname,dt);
+[w0,factor,bound] = wt_params(opt.type,wname,dt);
 
 %------------------------ Frequencies/scales vector -----------------------
 % Three ways to construct scales vector:
@@ -114,7 +127,7 @@ if strcmpi(opt.sampling,'freq')
     [f,scales] = wt_create_freq(N,bound,factor,opt);
 elseif strcmpi(opt.sampling,'scales')
     % sampling in scales
-    [f,scales] = wt_create_scales(N,bound,factor,opt);
+    [f,scales] = wt_create_scales(N,bound,factor,w0,opt);
 else
     % wrong type of sampling
     error('Unknown method of constructing scales vector: %s', opt.sampling);
@@ -136,7 +149,7 @@ S = abs(coefs.*conj(coefs));
 
 % normalize by the scales
 if isfield(opt,'norm') && opt.norm
-    S = bsxfun(@rdivide,S,scales);
+    S = bsxfun(@rdivide,S,scales(:));
 end
 
 % normalize to get PSD
@@ -145,73 +158,44 @@ tfr = S./N/w0*2*pi;
 
 %---------------------------- Cone of influence ---------------------------
 % left and right edges of cone of influence
-coi = wt_get_coi(scales, bound);
+coi = wt_get_coi(scales, N, bound);
 
 % --------------------------------- Plots ---------------------------------
 if isfield(opt,'plot') && opt.plot
-    
-    figure;
-    fpos = get(gcf,'Position');
-    set(gcf,'Position',[fpos(1:2)/4 fpos(3:4)*2]);
-    
-    % plot wavelets
-    contourf(t,f,tfr,20,'edgecolor','none'); set(gca,'YDir','normal');
-    if verLessThan('matlab','8.2')
-        if exist('brewermap','file') == 2
-            colormap(brewermap([],'WhRd'));
-        else
-            colormap(1-hot);
-        end
-        cc = 'k';
-    else
-        cc = 'w';
-    end
-    colorbar;
-    hold on;
-    
-    % plot COI
-    hPatch = patch([L 0 0]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
-        cc,'LineWidth',1.3);
-    hatchfill(hPatch, 'cross', 45, 10,cc);
-    hPatch = patch([R N N]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
-        cc,'LineWidth',1.3);
-    hatchfill(hPatch, 'cross', 45, 10,cc);
-    
-    % axes labels
-    xlabel('Time', 'Fontsize', 14)
-    ylabel('Pseudo-frequency', 'Fontsize', 14)
-    
-%     tightfig; 
+    wt_plot(t,f,tfr,coi)
+%     figure;
+%     fpos = get(gcf,'Position');
+%     set(gcf,'Position',[fpos(1:2)/4 fpos(3:4)*2]);
+%     
+%     % plot wavelets
+%     contourf(t,f,tfr,20,'edgecolor','none'); set(gca,'YDir','normal');
+%     if verLessThan('matlab','8.2')
+%         if exist('brewermap','file') == 2
+%             colormap(brewermap([],'WhRd'));
+%         else
+%             colormap(1-hot);
+%         end
+%         cc = 'k';
+%     else
+%         cc = 'w';
+%     end
+%     colorbar;
+%     hold on;
+%     
+%     % plot COI
+%     hPatch = patch([L 0 0]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
+%         cc,'LineWidth',1.3);
+%     hatchfill(hPatch, 'cross', 45, 10,cc);
+%     hPatch = patch([R N N]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
+%         cc,'LineWidth',1.3);
+%     hatchfill(hPatch, 'cross', 45, 10,cc);
+%     
+%     % axes labels
+%     xlabel('Time', 'Fontsize', 14)
+%     ylabel('Pseudo-frequency', 'Fontsize', 14)
+%     
+% %     tightfig; 
 end
 
 end
 
-function opt = check_opts(opt)
-% first check that all the fields are valid
-val_flds = {'type','sampling','fmax','fmin','fstep','nscales',...
-    'F','norm','plot'};
-opt_flds = fieldnames(opt);
-not_valid = opt_flds(~ismember(opt_flds,val_flds));
-if ~isempty(not_valid)
-    error('"%s" not a valid property.\n', not_valid{:});
-end
-
-% set default values for missing options
-% convolution- or FFT-based CWT
-if ~isfield(opt, 'type')
-    opt.type = 'fft';
-end
-% sampling of frequencies/scales
-if ~isfield(opt, 'sampling') || isfield(opt,'F')
-    opt.sampling = 'freq';
-elseif strcmpi(opt.sampling,'scales') && isfield(opt,'F')
-    warning(['Cannot use both scales and frequency vector. ',...
-        'Switching to sampling in frequencies.']);
-    opt.sampling = 'freq';
-end
-% maximal resolvable frequency
-if ~isfield(opt, 'fmax') || isempty(opt.fmax)
-    opt.fmax = fs/2;
-end
-
-end

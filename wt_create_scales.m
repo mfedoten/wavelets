@@ -1,4 +1,4 @@
-function [f,scales] = wt_create_scales(N,bound,factor,opt)
+function [f,scales] = wt_create_scales(N,bound,factor,w0,opt)
 
 % If min freq. is specified, derive max scale from it, otherwise choose it such
 % that 1/2 of WT coefficients would be affected by COI see Section VI in [1] for
@@ -20,8 +20,9 @@ if isfield(opt, 'nscales') && ~isempty(opt.nscales)
     K = exp((log(smax) - log(s0)) / (I - 1));
 else
     % based on the given % of overlap between wavelet basis
+    chi = opt.chi/100;
     % proportionality constant
-    wd = -sqrt(-2*log(opt.chi));
+    wd = -sqrt(-2*log(chi));
     % constant ratio sc(i+1)/sc(i)
     K = w0/(w0 + wd);
     % derive number of scales
