@@ -1,4 +1,4 @@
-function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
+function [tfr,t,f,scales,coi] = wt(sig,fs,wname,varargin)
 % Calculates time-frequency representations (TFR) using continuous 1-D wavelet
 % transform (CWT). Also computes cone of influence (COI), a region where
 % coefficients of CWT are affects be edge effect.
@@ -20,7 +20,7 @@ function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
 %
 %
 % SYNTAX
-% [tfr,f,t,coi,scales] = wt(sig,fs,wname,opt)
+% [tfr,t,f,scales,coi] = wt(sig,fs,wname,opt)
 %
 % INPUT
 % sig    - signal to analyse;
@@ -50,25 +50,24 @@ function [tfr,f,t,coi,scales] = wt(sig,fs,wname,varargin)
 %   CWT will be computed up to this frequency (should be less or equal to
 %   Nyquist frequency).
 % fmin     : float
-%   Minimal frequency. If nothing is provided, then it is chosen so only 50% of
-%   coefficients are affected by the COI.
+%   Minimal frequency. If nothing is provided, then it is chosen such as only 
+%   50% ofcoefficients are affected by the COI.
 % fstep    : float (default: fstep = fmin)
-%   If sampling was chosen as 'freq', specifies frequency resolution.
+%   If sampling was chosen as 'freq', specifies frequency resolution. If empty
+%   the default frequency step is chosen to be equal min. frequency.
 % nscales  : int
-%   If sampling was chosen as 'scales', specifies desired number of scales. By
-%   default nscales is chosen to give 85% overlap between wavelet basis, see [1]
-%   for details.
-% chi      : int
-%   Persantage of overlap between wavelet basis (default is 85%), see [1].
+%   If sampling was chosen as 'scales', specifies desired number of scales.
+% chi      : int (default is 85%)
+%   If sampling was chosen as 'scales', specifies the persantage of overlap 
+%   between wavelet basis, see [1] for details.
 % F        : vector of floats
-%   Can be used to create vector of scales, by conversion instead of creating
-%   vector inside the function (substitute 'fstep' option).
+%   An arbitrary vector of frequcncies, is used to create vector of scales by
+%   converting it directly.
 % norm     : boolean (default: False)
-%   If True, then resulting each row of CWT will be normalized by the
+%   If True, then each row of resulting CWT will be normalized by the
 %   corresponding scale.
 % plot     : boolean (default: False)
-%   If True plots CWT with contour plots, values and scales/frequencies are
-%   linearly scaled and COI is displayed with hatched regions.
+%   If True, plots CWT and COI.
 %
 % REFERENCES:
 % 1. Jordan, D., Miksad, R. W. & Powers, E. J. Implementation of the 
