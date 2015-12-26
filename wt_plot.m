@@ -1,16 +1,26 @@
-function wt_plot(t,f,tfr,coi,fontmin,hfig)
+function wt_plot(t,f,tfr,coi,hfig,fontmin)
 % Plots wavelets. Depending on the scale vector either uses imagesc for linearly
 % sampled frequencsies of pcolor for non-linear case. Creates new figure or uses
 % provided figure (last input as figure handle). Can also increase font size a
 % bit or use provided font for ticks (fontmin input). coi input is used to plot
 % COI, it should be two-column matrix, with the first column being the left edge
 % of COI and the second one being the right edge.
+% INPUT:
+% t       : time vector
+% f       : frequency vector
+% tfr     : CWT coefficients matrix
+% coi     : cone of influence (optional); two-column matrix, where the first 
+%           column is the right edge of COI and the second one is the left edge;
+% hfig    : figure handle (optional), if provided plots in this figure, 
+%           otherwise creates new figure;
+% fontmin : minimal font size used in tick and colorbar labels (optional).
+
 
 % Set font sizes
 % get default font
 fs_default = get(0,'DefaultAxesFontSize');
 % smallest font for axes
-if nargin > 4 && fontmin
+if nargin > 5 && fontmin
     set(0,'DefaultAxesFontSize',fontmin);
 else
     set(0,'DefaultAxesFontSize',fs_default+2);
@@ -21,7 +31,7 @@ fs_ticks  = get(0,'DefaultAxesFontSize');
 fs_labels = fs_ticks + 4;
 
 % Use provided figure, if asked
-if nargin > 5 && ishandle(hfig)
+if nargin > 4 && ishandle(hfig)
     hf = hfig;
 else
     hf = figure;
@@ -47,9 +57,6 @@ else
     end
     YLabelStr = 'Frequency (log_2)';
 end
-
-% Make axis square
-% axis square;
 
 % Decent tick lengths
 set(gca,'ticklength',.5*get(gca,'ticklength'));
