@@ -1,4 +1,4 @@
-function [tfr,t,f,scales,coi] = wt(sig,fs,wname,varargin)
+function [tfr,t,f,scales,coi] = wt(sig,fs,varargin)
 % Calculates time-frequency representations (TFR) using continuous 1-D wavelet
 % transform (CWT). Also computes cone of influence (COI), a region where
 % coefficients of CWT are affects be edge effect.
@@ -20,12 +20,11 @@ function [tfr,t,f,scales,coi] = wt(sig,fs,wname,varargin)
 %
 %
 % SYNTAX
-% [tfr,t,f,scales,coi] = wt(sig,fs,wname,opt)
+% [tfr,t,f,scales,coi] = wt(sig,fs,opt)
 %
 % INPUT
 % sig    - signal to analyse;
-% fs     - sampling frequency;
-% wname  - name of the wavelet function;
+% fs     - sampling frequency
 % opt    - options for wavelet transform, can be defined either as structure or
 %          as name-value pairs.
 % 
@@ -41,6 +40,10 @@ function [tfr,t,f,scales,coi] = wt(sig,fs,wname,varargin)
 % scales - vector of scales.
 %
 % OPTIONS
+% wname    : string
+%   Contains name of the wavelet to be used. For FFT-based only analytical
+%   Morlet ('morl') is supported. For convolution-based CWT wavelet name can be
+%   any supported by MATLAB's 'cwt'-function (see 'waveinfo' for more info).
 % type     : 'fft' (default) | 'conv'
 %   Which type of CWT to use: convolution of FFT-based.
 % sampling : 'freq' (default) | 'scales'
@@ -89,9 +92,9 @@ dt = 1/fs;          % sampling time
 t  = (0:N-1)*dt;    % time vector
 
 % read options (if any) into structure and set defaults
-if nargin < 4
+if nargin < 3
     opt = struct();
-elseif nargin >= 4
+elseif nargin >= 3
     try
         opt = struct(varargin{:});
     catch
@@ -100,6 +103,11 @@ elseif nargin >= 4
 end
 % set default values for missing options
 if ~isfield(opt, 'type'), opt.type = 'fft'; end
+if ~isfield(opt, 'wname') && strcmpi(opt.type, 'fft')
+    opt.wname = 'morl';
+elseif ~isfield(opt, 'wname') && strcmpi(opt.type, 'conv')
+    opt.wname = 'cmor1.5-0.95';
+end
 if ~isfield(opt, 'fmax'), opt.fmax = fs/2; end
 if ~isfield(opt, 'chi'),  opt.chi  = 85; end
 
@@ -113,7 +121,7 @@ elseif strcmpi(opt.sampling,'scales') && isfield(opt,'F')
 end
 
 %--------------------------- Wavelet parameters ---------------------------
-[w0,factor,bound] = wt_params(opt.type,wname,dt);
+[w0,factor,bound] = wt_params(opt.type,opt.wname,dt);
 
 %------------------------ Frequencies/scales vector -----------------------
 % Three ways to construct scales vector:
@@ -135,12 +143,12 @@ end
 %---------------- Calculate wavelet transform coefficients ----------------
 if strcmpi(opt.type,'fft')      % FFT-based
     % for now only morlet wavelet is supported with FFT-based method
-    wname = 'morl';
-    cwtStruct = cwtft({sig,dt},'scales',scales,'wavelet',wname,...
+    opt.wname = 'morl';
+    cwtStruct = cwtft({sig,dt},'scales',scales,'wavelet',opt.wname,...
         'padmode','zpd');
     coefs = cwtStruct.cfs;
 elseif strcmpi(opt.type,'conv')
-    coefs  = cwt(sig, scales, wname);
+    coefs  = cwt(sig, scales, opt.wname);
 end
 
 % get scalogram (power)
@@ -153,7 +161,6 @@ end
 
 % normalize to get PSD
 tfr = S./N/w0*2*pi;
-% tfr = 100*S./sum(S(:));
 
 %---------------------------- Cone of influence ---------------------------
 % left and right edges of cone of influence
@@ -161,39 +168,7 @@ coi = wt_get_coi(scales, N, bound);
 
 % --------------------------------- Plots ---------------------------------
 if isfield(opt,'plot') && opt.plot
-    wt_plot(t,f,tfr,coi)
-%     figure;
-%     fpos = get(gcf,'Position');
-%     set(gcf,'Position',[fpos(1:2)/4 fpos(3:4)*2]);
-%     
-%     % plot wavelets
-%     contourf(t,f,tfr,20,'edgecolor','none'); set(gca,'YDir','normal');
-%     if verLessThan('matlab','8.2')
-%         if exist('brewermap','file') == 2
-%             colormap(brewermap([],'WhRd'));
-%         else
-%             colormap(1-hot);
-%         end
-%         cc = 'k';
-%     else
-%         cc = 'w';
-%     end
-%     colorbar;
-%     hold on;
-%     
-%     % plot COI
-%     hPatch = patch([L 0 0]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
-%         cc,'LineWidth',1.3);
-%     hatchfill(hPatch, 'cross', 45, 10,cc);
-%     hPatch = patch([R N N]*dt,[f f(end) f(1)],min(tfr(:)),'FaceColor','k','EdgeColor',...
-%         cc,'LineWidth',1.3);
-%     hatchfill(hPatch, 'cross', 45, 10,cc);
-%     
-%     % axes labels
-%     xlabel('Time', 'Fontsize', 14)
-%     ylabel('Pseudo-frequency', 'Fontsize', 14)
-%     
-% %     tightfig; 
+    wt_plot(t,f,tfr,coi);
 end
 
 end
