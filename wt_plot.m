@@ -50,10 +50,10 @@ else
     % if non-linear take logarithm
     f = log2(f);    
     % check once again if it's linear or not
-    if sum(diff(diff(f))) < eps
+    if sum(diff(diff(f))) < 10^-15
         imagesc(t,f,tfr);  axis xy;
     else    % if it's still non-linear, use pcolor
-        pcolo(t,f,tfr); shadig flat;
+        pcolor(t,f,tfr); shading flat;
     end
     YLabelStr = 'Frequency (log_2)';
 end

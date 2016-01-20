@@ -1,4 +1,4 @@
-function [tfr,t,f,scales,coi] = wt(sig,fs,varargin)
+function [tfr,t,f,scales,coi] = wt(sig,varargin)
 % Calculates time-frequency representations (TFR) using continuous 1-D wavelet
 % transform (CWT). Also computes cone of influence (COI), a region where
 % coefficients of CWT are affects be edge effect.
@@ -20,11 +20,10 @@ function [tfr,t,f,scales,coi] = wt(sig,fs,varargin)
 %
 %
 % SYNTAX
-% [tfr,t,f,scales,coi] = wt(sig,fs,opt)
+% [tfr,t,f,scales,coi] = wt(sig,opt)
 %
 % INPUT
 % sig    - signal to analyse;
-% fs     - sampling frequency
 % opt    - options for wavelet transform, can be defined either as structure or
 %          as name-value pairs.
 % 
@@ -44,6 +43,9 @@ function [tfr,t,f,scales,coi] = wt(sig,fs,varargin)
 %   Contains name of the wavelet to be used. For FFT-based only analytical
 %   Morlet ('morl') is supported. For convolution-based CWT wavelet name can be
 %   any supported by MATLAB's 'cwt'-function (see 'waveinfo' for more info).
+% fs       : float
+%   Sampling frequency. If not specified the default value is chosen to be fs=1,
+%   so the resulting time vector is equal to time indices.
 % type     : 'fft' (default) | 'conv'
 %   Which type of CWT to use: convolution of FFT-based.
 % sampling : 'freq' (default) | 'scales'
@@ -87,14 +89,10 @@ function [tfr,t,f,scales,coi] = wt(sig,fs,varargin)
 
 %-------------------------- Load and check inputs -------------------------
 
-N  = length(sig);   % number of points in the signal
-dt = 1/fs;          % sampling time
-t  = (0:N-1)*dt;    % time vector
-
 % read options (if any) into structure and set defaults
-if nargin < 3
+if nargin < 2
     opt = struct();
-elseif nargin >= 3
+elseif nargin >= 2
     try
         opt = struct(varargin{:});
     catch
@@ -108,7 +106,8 @@ if ~isfield(opt, 'wname') && strcmpi(opt.type, 'fft')
 elseif ~isfield(opt, 'wname') && strcmpi(opt.type, 'conv')
     opt.wname = 'cmor1.5-0.95';
 end
-if ~isfield(opt, 'fmax'), opt.fmax = fs/2; end
+if ~isfield(opt, 'fs'), opt.fs = 1; end
+if ~isfield(opt, 'fmax'), opt.fmax = opt.fs/2; end
 if ~isfield(opt, 'chi'),  opt.chi  = 85; end
 
 % sampling of frequencies/scales (freq. default)
@@ -119,6 +118,10 @@ elseif strcmpi(opt.sampling,'scales') && isfield(opt,'F')
         'Switching to sampling in frequencies.']);
     opt.sampling = 'freq';
 end
+
+N  = length(sig);   % number of points in the signal
+dt = 1/opt.fs;      % sampling time
+t  = (0:N-1)*dt;    % time vector
 
 %--------------------------- Wavelet parameters ---------------------------
 [w0,factor,bound] = wt_params(opt.type,opt.wname,dt);
