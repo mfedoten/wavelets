@@ -54,6 +54,8 @@ Plot function displays COI as hatched regions, to do so an additional function i
 
 
 ## Example
+Here is a simple example of the function's use. More examples are in the examples folder.
+
 ```matlab
 % create chirp signal
 N  = 2048;
