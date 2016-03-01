@@ -1,4 +1,4 @@
-function [tfr,f,t,scales,coi] = wt(sig,varargin)
+function [tfr,f,t,coi,scales] = wt(sig,varargin)
 % Calculates time-frequency representations (TFR) using continuous 1-D wavelet
 % transform (CWT). Also computes cone of influence (COI), a region where
 % coefficients of CWT are affects be edge effect.
