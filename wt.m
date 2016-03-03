@@ -171,7 +171,7 @@ coi = wt_get_coi(scales, N, bound);
 
 % --------------------------------- Plots ---------------------------------
 if isfield(opt,'plot') && opt.plot
-    wt_plot(t,f,tfr,coi);
+    plot_wt(t,f,tfr,coi);
 end
 
 end

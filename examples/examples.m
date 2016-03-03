@@ -28,7 +28,7 @@ ylabel('Amplitude','FontSize',16);
 [WT,t_wt,f_wt,scales,coi] = wt(x);
 hFigWav = figure;
 hFigWav.Position(3:4) = [1.5 1.5].*hFigWav.Position(3:4);
-wt_plot(t_wt,f_wt,WT,coi,hFigWav);
+plot_wt(t_wt,f_wt,WT,coi,hFigWav);
 title('Default options','FontSize',16);
 
 % speicify sampling frequency and choose convolution-based method

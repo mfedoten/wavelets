@@ -1,4 +1,4 @@
-function wt_plot(t,f,tfr,coi,hfig,fontmin)
+function plot_wt(t,f,tfr,coi,hfig,fontmin)
 % Plots wavelets. Depending on the scale vector either uses imagesc for linearly
 % sampled frequencsies of pcolor for non-linear case. Creates new figure or uses
 % provided figure (last input as figure handle). Can also increase font size a
