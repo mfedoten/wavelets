@@ -1,4 +1,4 @@
-function plot_wt(t,f,tfr,coi,hfig,fontmin)
+function plot_wt(t,f,tfr,coi,hax,fontmin,colmap)
 % Plots wavelets. Depending on the scale vector either uses imagesc for linearly
 % sampled frequencsies of pcolor for non-linear case. Creates new figure or uses
 % provided figure (last input as figure handle). Can also increase font size a
@@ -11,59 +11,67 @@ function plot_wt(t,f,tfr,coi,hfig,fontmin)
 % tfr     : CWT coefficients matrix
 % coi     : cone of influence (optional); two-column matrix, where the first 
 %           column is the right edge of COI and the second one is the left edge;
-% hfig    : figure handle (optional), if provided plots in this figure, 
-%           otherwise creates new figure;
-% fontmin : minimal font size used in tick and colorbar labels (optional).
+% hax     : axis handle (optional), if provided plots in this axis, otherwise
+%           creates new figure;
+% fontmin : minimal font size used in tick and colorbar labels (optional);
+% colmap  : colormap (optional); if empty uses default Matlab colormap.
 
 
-% Set font sizes
-% get default font
-fs_default = get(0,'DefaultAxesFontSize');
-% smallest font for axes
-if nargin > 5 && fontmin
-    set(0,'DefaultAxesFontSize',fontmin);
+% Use provided axes, if asked
+if nargin > 4 && ~isempty(hax) && ishandle(hax)
+    hf = get(hax,'Parent');
 else
-    set(0,'DefaultAxesFontSize',fs_default+2);
+    figure('Units','Centimeters');
+    fpos = get(gcf,'Position');
+    fpos = [0.6*fpos(1:2) 1.2*fpos(3) 1.2*fpos(3)];
+    set(gcf,'Position',fpos);
+    hax = axes('Units','Centimeters','Position',[0.1*fpos(3:4) 0.8*fpos(3:4)]);
 end
-% axes ticks
-fs_ticks  = get(0,'DefaultAxesFontSize');
-% axes labels
-fs_labels = fs_ticks + 4;
-
-% Use provided figure, if asked
-if nargin > 4 && ishandle(hfig)
-    hf = hfig;
-else
-    hf = figure;
-    pos = get(hf,'Position');
-    % increase the size a bit
-    set(hf,'Position',[pos(1) pos(2) 1.5*pos(3) 1.5*pos(4)]);
-end
-set(hf,'Render','painters');
+axes(hax);
 
 % Check if frequency vector is linear or not
-if sum(diff(diff(f))) < eps
+if abs(mean(diff(diff(f)))) < eps
     % if linear use image
     imagesc(t,f,tfr); axis xy;
-    YLabelStr = 'Frequency';
+    YLabelStr = 'Frequency (Hz)';
+    set(hf,'Render','painters');
 else
     % if non-linear take logarithm
     f = log2(f);    
     % check once again if it's linear or not
-    if sum(diff(diff(f))) < 10^-15
+    if abs(mean(diff(diff(f)))) < eps
         imagesc(t,f,tfr);  axis xy;
+        set(hf,'Render','painters');
     else    % if it's still non-linear, use pcolor
         pcolor(t,f,tfr); shading flat;
     end
     YLabelStr = 'Frequency (log_2)';
 end
 
-% Decent tick lengths
-set(gca,'ticklength',.5*get(gca,'ticklength'));
+% cone of influence (plot only if exists)
+if nargin > 3 && ~isempty(coi)
+    L = coi(:,1); R = coi(:,2);
+    ccoi = 'w';                 % color to plot COI
+    disp_coi(gca,t,L,R,f,ccoi,min(tfr(:)));
+end
+
+% change font sizes
+if nargin > 5 && ~isempty(fontmin)
+    % smallest font is for axes ticks
+    set(ha,'FontSize',fontmin);
+else
+    fontmin = get(ha,'FontSize');
+end
+fs_labels = fontmin + 2;
 
 % Anotate the plots
 ylabel(YLabelStr, 'FontSize', fs_labels);
-xlabel('Time', 'FontSize', fs_labels);
+xlabel('Time (s)', 'FontSize', fs_labels);
+
+% set desired colormap
+if nargin > 5 && ~isempty(colmap)
+    colormap(hax,colmap);
+end
 
 % Colorbar
 pos = get(gca,'Position');
@@ -80,15 +88,8 @@ else
 end
 set(gca,'Position',pos);
 
-% cone of influence (plot only if exists)
-if nargin > 3 && ~isempty(coi)
-    L = coi(:,1); R = coi(:,2);
-    ccoi = 'w';                 % color to plot COI
-    disp_coi(gca,t,L,R,f,ccoi,min(tfr(:)));
-end
-
-% set default font size back
-set(0,'DefaultAxesFontSize',fs_default);
+% Decent tick lengths
+set(gca,'ticklength',.5*get(gca,'ticklength'));
 
 end
 
@@ -105,13 +106,4 @@ hPatch = patch([R(1); R; length(tReal); length(tReal)]*dt,...
     [-1 f f(end)+1 -1], minLvl, 'FaceColor', 'none');
 hatchfill(hPatch, 'cross', 45, 10, cc);
 plot([R(1); R]*dt,[-1 f],cc,'linewidth',1.5);
-
-% % for contourf or pcolor plots
-% hPatch = patch([L; 0; 0]/fs,[f f(end) 0],minLvl,'FaceColor','none');
-% hatchfill(hPatch, 'cross', 45, 10, cc);
-% plot(L/fs, f, cc, 'linewidth', 2.5);
-% hPatch = patch([R; length(tReal); length(tReal)]/fs,[f f(end) 0],minLvl,...
-%     'FaceColor','none');
-% hatchfill(hPatch, 'cross', 45, 10, cc);
-% plot(R/fs, f, cc, 'linewidth', 2.5);
 end
