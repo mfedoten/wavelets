@@ -21,10 +21,10 @@ function plot_wt(t,f,tfr,coi,hax,fontmin,colmap)
 if nargin > 4 && ~isempty(hax) && ishandle(hax)
     hf = get(hax,'Parent');
 else
-    figure('Units','Centimeters');
+    hf = figure('Units','Centimeters');
     fpos = get(gcf,'Position');
     fpos = [0.6*fpos(1:2) 1.2*fpos(3) 1.2*fpos(3)];
-    set(gcf,'Position',fpos);
+    set(hf,'Position',fpos);
     hax = axes('Units','Centimeters','Position',[0.1*fpos(3:4) 0.8*fpos(3:4)]);
 end
 axes(hax);
@@ -58,9 +58,9 @@ end
 % change font sizes
 if nargin > 5 && ~isempty(fontmin)
     % smallest font is for axes ticks
-    set(ha,'FontSize',fontmin);
+    set(hax,'FontSize',fontmin);
 else
-    fontmin = get(ha,'FontSize');
+    fontmin = get(hax,'FontSize');
 end
 fs_labels = fontmin + 2;
 
@@ -69,7 +69,7 @@ ylabel(YLabelStr, 'FontSize', fs_labels);
 xlabel('Time (s)', 'FontSize', fs_labels);
 
 % set desired colormap
-if nargin > 5 && ~isempty(colmap)
+if nargin > 6 && ~isempty(colmap)
     colormap(hax,colmap);
 end
 
@@ -77,14 +77,14 @@ end
 pos = get(gca,'Position');
 cb = colorbar; pause(0.5);
 if verLessThan('matlab','8.4')
-    set(cb, 'TickLength', [0 0], 'FontSize', fs_ticks);
+    set(cb, 'TickLength', [0 0], 'FontSize', fontmin);
     poscb = get(cb, 'Position');
     set(cb, 'Position', [poscb(1)+poscb(3) poscb(2) poscb(3) poscb(4)]);
 else
     set(cb, 'TickLength', 0, 'Box', 'off');
     cb.Ruler.Axle.Visible = 'off';
     cb.Ruler.SecondaryLabel.HorizontalAlignment = 'left';
-    cb.FontSize = fs_ticks;
+    cb.FontSize = fontmin;
 end
 set(gca,'Position',pos);
 

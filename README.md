@@ -21,6 +21,10 @@ Plot function displays COI as hatched regions, to do so an additional function i
 
 
 ## Syntax
+```matlab
+[tfr,t,f,scales,coi] = wt(sig,property_structure)
+[tfr,t,f,scales,coi] = wt(sig,'propertyname',propertyvalue)
+```
 
 |Input  |                   |
 |-------|-------------------|
@@ -65,7 +69,7 @@ x  = chirp(t,0,t(end),fs/2,'quadratic')';
 x  = x + 0.5*randn(size(x));
 figure; plot(t,x);
 % get cwt from min frequency to fs/2 with default step and display results
-[WT,f,t,coi,scales] = wt(x,'type','fft','fs',fs,'plot',1);
+[WT,f_wt,t_wt,coi,scales] = wt(x,'type','fft','fs',fs,'plot',1);
 % or you could specify options in the form of structure
 opt = struct('type','fft','fs',fs,'plot',1);
 [WT,f,t,coi,scales] = wt(x,opt);
