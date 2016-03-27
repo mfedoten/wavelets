@@ -98,12 +98,12 @@ dt = tReal(2) - tReal(1);
 axes(hAx);
 hold on;
 % add ones due to imagesc properties
-hPatch = patch([L(1)*dt; L*dt; 0; 0], [-1 f f(end)+1 -1],...
+hPatch = patch([L(1)*dt; L*dt; 0; 0], [f(1)-1 f f(end)+1 f(1)-1],...
     minLvl, 'FaceColor', 'none');
 hatchfill(hPatch, 'cross', 45, 10, cc);
-plot([L(1);L]*dt,[-1 f],cc,'linewidth',1.5);
+plot([L(1);L]*dt,[f(1)-1 f],cc,'linewidth',1.5);
 hPatch = patch([R(1); R; length(tReal); length(tReal)]*dt,...
-    [-1 f f(end)+1 -1], minLvl, 'FaceColor', 'none');
+    [f(1)-1 f f(end)+1 f(1)-1], minLvl, 'FaceColor', 'none');
 hatchfill(hPatch, 'cross', 45, 10, cc);
-plot([R(1); R]*dt,[-1 f],cc,'linewidth',1.5);
+plot([R(1); R]*dt,[f(1)-1 f],cc,'linewidth',1.5);
 end
