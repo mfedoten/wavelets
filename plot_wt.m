@@ -1,4 +1,4 @@
-function plot_wt(t,f,tfr,coi,hax,fontmin,colmap)
+function plot_wt(t,f,tfr,coi,hax,flim,fontmin,colmap)
 % Plots wavelets. Depending on the scale vector either uses imagesc for linearly
 % sampled frequencsies of pcolor for non-linear case. Creates new figure or uses
 % provided figure (last input as figure handle). Can also increase font size a
@@ -11,6 +11,8 @@ function plot_wt(t,f,tfr,coi,hax,fontmin,colmap)
 % tfr     : CWT coefficients matrix
 % coi     : cone of influence (optional); two-column matrix, where the first 
 %           column is the right edge of COI and the second one is the left edge;
+% flim    : frequency limits, given as two-element vctor: [fmin fmax] OR as a
+%           scalar value: fmax.
 % hax     : axis handle (optional), if provided plots in this axis, otherwise
 %           creates new figure;
 % fontmin : minimal font size used in tick and colorbar labels (optional);
@@ -29,6 +31,17 @@ else
 end
 axes(hax);
 
+% set Y-limits; plot until max freq., if specified
+if nargin > 5 && ~isempty(flim)
+    if isscalar(flim)
+        yl = [f(1) flim];
+    elseif length(flim)==2
+        yl = [flim(1) flim(2)];
+    end
+else
+    yl = [f(1) f(end)];
+end
+
 % Check if frequency vector is linear or not
 if abs(mean(diff(diff(f)))) < eps
     % if linear use image
@@ -37,7 +50,8 @@ if abs(mean(diff(diff(f)))) < eps
     set(hf,'Render','painters');
 else
     % if non-linear take logarithm
-    f = log2(f);    
+    f = log2(f);
+    yl = log2(yl);
     % check once again if it's linear or not
     if abs(mean(diff(diff(f)))) < eps
         imagesc(t,f,tfr);  axis xy;
@@ -47,6 +61,7 @@ else
     end
     YLabelStr = 'Frequency (log_2)';
 end
+ylim(yl);
 
 % cone of influence (plot only if exists)
 if nargin > 3 && ~isempty(coi)
@@ -56,7 +71,7 @@ if nargin > 3 && ~isempty(coi)
 end
 
 % change font sizes
-if nargin > 5 && ~isempty(fontmin)
+if nargin > 6 && ~isempty(fontmin)
     % smallest font is for axes ticks
     set(hax,'FontSize',fontmin);
 else
@@ -69,7 +84,7 @@ ylabel(YLabelStr, 'FontSize', fs_labels);
 xlabel('Time (s)', 'FontSize', fs_labels);
 
 % set desired colormap
-if nargin > 6 && ~isempty(colmap)
+if nargin > 7 && ~isempty(colmap)
     colormap(hax,colmap);
 end
 
