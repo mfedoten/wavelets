@@ -164,6 +164,7 @@ end
 
 % normalize to get PSD
 tfr = S./N/w0*2*pi;
+% tfr = S./opt.fs;
 
 %---------------------------- Cone of influence ---------------------------
 % left and right edges of cone of influence
